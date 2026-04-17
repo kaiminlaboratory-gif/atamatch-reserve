@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ドライヘッドスパ静岡 Atamatch｜オンライン予約</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP','Hiragino Kaku Gothic Pro',sans-serif;background:#f3f3f3;color:#1a1a1a;min-height:100vh}
+:root{
+  --green:#21b65c;--green2:#2ccf6f;--green-light:#e8f8ee;--green-border:#b2e8c8;
+  --bg:#f3f3f3;--white:#fff;--border:#e0e0e0;--text:#1a1a1a;--muted:#888;--light:#555;
+  --red:#f20320;--radius:8px;
+}
+.container{max-width:640px;margin:0 auto;padding:0 16px}
+
+/* ─── Header ─── */
+.site-header{background:var(--green);padding:10px 0}
+.site-header-inner{display:flex;justify-content:space-between;align-items:center}
+.site-title{color:#fff;font-size:14px;font-weight:700;letter-spacing:.5px}
+.admin-btn{font-size:11px;color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:4px;padding:4px 10px;cursor:pointer;background:transparent;font-family:inherit}
+.admin-btn:hover{background:rgba(255,255,255,.2)}
+
+/* ─── Store info ─── */
+.store-block{background:#fff;border-bottom:1px solid var(--border);padding:16px 0}
+.store-inner{display:flex;gap:14px;align-items:center}
+.store-img{width:64px;height:64px;border-radius:var(--radius);background:var(--green-light);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;border:1px solid var(--green-border)}
+.store-name{font-size:16px;font-weight:700;margin-bottom:3px}
+.store-sub{font-size:11px;color:var(--muted)}
+.store-tag{display:inline-block;background:var(--green-light);color:var(--green);border:1px solid var(--green-border);border-radius:4px;font-size:10px;font-weight:600;padding:2px 8px;margin-top:4px}
+
+/* ─── Steps ─── */
+.step-bar{background:#fff;border-bottom:1px solid var(--border)}
+.step-list{display:flex}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 4px 10px;position:relative;border-bottom:3px solid transparent}
+.step-item.active{border-bottom-color:var(--green)}
+.step-item:not(:last-child)::after{content:'›';position:absolute;right:-2px;top:50%;transform:translateY(-60%);font-size:16px;color:#ccc;z-index:1}
+.step-circle{width:22px;height:22px;border-radius:50%;border:2px solid #ddd;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#bbb;margin-bottom:4px}
+.step-item.done .step-circle,.step-item.active .step-circle{background:var(--green);border-color:var(--green);color:#fff}
+.step-lbl{font-size:9px;color:#aaa;text-align:center;line-height:1.3}
+.step-item.active .step-lbl,.step-item.done .step-lbl{color:var(--green)}
+.step-item.active .step-lbl{font-weight:600}
+
+/* ─── Section ─── */
+.section-head{padding:18px 0 10px}
+.section-title{font-size:17px;font-weight:700}
+.section-sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* ─── Staff cards ─── */
+.staff-section-label{background:var(--green);color:#fff;font-size:14px;font-weight:700;padding:8px 16px;margin:0 -16px 14px;letter-spacing:.3px}
+.staff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:6px}
+.staff-card{border:2px solid var(--border);border-radius:var(--radius);padding:12px 14px;cursor:pointer;transition:all .2s;background:#fff;display:flex;align-items:center;gap:12px;position:relative;min-height:76px}
+.staff-card:hover{border-color:var(--green-border);background:var(--green-light)}
+.staff-card.selected{border-color:var(--green);background:var(--green-light)}
+.staff-sel-badge{position:absolute;top:8px;right:8px;background:var(--green2);color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px}
+.staff-photo{width:56px;height:56px;border-radius:6px;background:#e8e8e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;border:1px solid #d8d8d8}
+.staff-name{font-size:14px;font-weight:700;margin-bottom:3px}
+.staff-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* ─── Menu card ─── */
+.menu-card{background:#fff;border-radius:var(--radius);border:2px solid var(--border);margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.menu-card.selected{border-color:var(--green)}
+.menu-card-body{padding:14px 16px}
+.menu-card-top{display:flex;align-items:flex-start;gap:12px}
+.menu-card-img{width:130px;height:100px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f0f0f0}
+.menu-card-img img{width:100%;height:100%;object-fit:cover}
+.menu-card-info{flex:1;min-width:0}
+.menu-card-name{font-size:15px;font-weight:700;margin-bottom:4px}
+.menu-card-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.menu-card-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px}
+.meta-item{font-size:12px;color:var(--light)}
+.menu-price{font-size:18px;font-weight:700;color:var(--text);white-space:nowrap}
+.menu-price span{font-size:11px;font-weight:400;color:var(--muted)}
+.select-btn{width:100%;padding:12px;background:var(--green2);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit;transition:background .2s}
+.select-btn:hover{background:var(--green)}
+.select-btn.sel{background:var(--green)}
+.sel-badge{display:inline-block;background:var(--green);color:#fff;border-radius:20px;font-size:11px;font-weight:600;padding:2px 10px;margin-top:8px}
+
+/* ─── Option cards ─── */
+.option-section{margin-top:8px}
+.option-title{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.option-title::before{content:'';display:block;width:4px;height:16px;background:var(--green);border-radius:2px}
+.option-card{background:#fff;border-radius:var(--radius);border:2px solid var(--border);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;cursor:pointer;transition:border-color .2s;gap:12px}
+.option-card:hover{border-color:var(--green-border)}
+.option-card.selected{border-color:var(--green);background:var(--green-light)}
+.option-img{width:72px;height:56px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#f0f0f0}
+.option-img img{width:100%;height:100%;object-fit:cover}
+.option-info{flex:1;min-width:0}
+.option-name{font-size:14px;font-weight:600}
+.option-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.option-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.option-price{font-size:15px;font-weight:700}
+.check-circle{width:24px;height:24px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0;transition:all .2s}
+.option-card.selected .check-circle{background:var(--green);border-color:var(--green)}
+
+/* ─── Availability Calendar ─── */
+.cal-wrap{background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:12px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+.cal-nav{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--light);font-family:inherit}
+.cal-nav:hover:not(:disabled){background:var(--green-light);border-color:var(--green);color:var(--green)}
+.cal-nav:disabled{opacity:.3;cursor:not-allowed}
+.cal-month-label{font-size:15px;font-weight:700}
+.avail-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 8px 12px;gap:2px}
+.cal-dlabel{text-align:center;font-size:11px;font-weight:600;padding:6px 0;color:var(--muted)}
+.cal-dlabel.sun{color:var(--red)}.cal-dlabel.sat{color:#1e90ff}
+.avail-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:48px;border-radius:6px;padding:3px 1px}
+.avail-cell.open{cursor:pointer}
+.avail-cell.open:hover:not(.asel){background:var(--green-light)}
+.avail-cell.asel{background:var(--green)}
+.avail-day{font-size:12px;font-weight:500;line-height:1}
+.avail-cell.dis .avail-day,.avail-cell.empty .avail-day{color:#ccc}
+.avail-cell.suncol:not(.asel) .avail-day{color:var(--red)}
+.avail-cell.satcol:not(.asel) .avail-day{color:#1e90ff}
+.avail-cell.asel .avail-day{color:#fff}
+.avail-mark{font-size:13px;font-weight:700;margin-top:3px;line-height:1}
+.avail-mark.open{color:var(--green)}
+.avail-mark.full{color:#ccc}
+.avail-cell.asel .avail-mark{color:#fff}
+
+/* ─── Time grid ─── */
+.time-wrap{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:14px 14px 12px;margin-bottom:12px}
+.time-wrap-title{font-size:13px;font-weight:600;color:var(--light);margin-bottom:10px}
+.time-grid-avail{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.time-cell{display:flex;flex-direction:column;align-items:center;padding:7px 3px;border:1px solid var(--border);border-radius:6px;background:#fff}
+.time-cell.open{cursor:pointer}
+.time-cell.open:hover:not(.tsel){border-color:var(--green);background:var(--green-light)}
+.time-cell.tsel{background:var(--green);border-color:var(--green)}
+.time-cell.full{background:#fafafa}
+.time-label{font-size:11px;font-weight:600;color:var(--text);line-height:1}
+.time-cell.full .time-label{color:#ccc}
+.time-cell.tsel .time-label{color:#fff}
+.time-mark{font-size:12px;font-weight:700;margin-top:3px;line-height:1}
+.time-mark.open{color:var(--green)}
+.time-mark.full{color:#ddd}
+.time-cell.tsel .time-mark{color:#fff}
+
+/* ─── Confirm / Form ─── */
+.confirm-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:10px}
+.confirm-row{display:flex;align-items:flex-start;padding:11px 16px;border-bottom:1px solid #f0f0f0}
+.confirm-row:last-child{border-bottom:none}
+.c-key{font-size:12px;color:var(--muted);width:90px;flex-shrink:0;padding-top:1px}
+.c-val{font-size:13px;font-weight:500;flex:1}
+.c-total{font-size:20px;font-weight:700;color:var(--green)}
+.form-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:10px}
+.form-card-title{font-size:13px;font-weight:700;color:var(--light);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.form-card-title::before{content:'';display:block;width:4px;height:14px;background:var(--green);border-radius:2px}
+.form-group{margin-bottom:14px}
+.form-group:last-child{margin-bottom:0}
+.form-label{font-size:12px;font-weight:600;color:var(--light);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.req-tag{background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.opt-tag{background:#ddd;color:var(--light);font-size:9px;padding:1px 5px;border-radius:3px}
+.form-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;background:#fff;color:var(--text)}
+.form-input:focus{border-color:var(--green)}
+.form-input.err{border-color:var(--red)}
+.err-msg{font-size:11px;color:var(--red);margin-top:3px}
+textarea.form-input{resize:vertical;min-height:72px;line-height:1.5}
+
+/* ─── Complete ─── */
+.complete-wrap{text-align:center;padding:40px 0}
+.complete-icon{width:72px;height:72px;border-radius:50%;background:var(--green-light);border:2px solid var(--green-border);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:34px}
+.rsv-id{font-size:28px;font-weight:700;color:var(--green);letter-spacing:4px;margin:8px 0 20px}
+
+/* ─── Footer bar ─── */
+.footer-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid var(--green);padding:10px 16px;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 -2px 12px rgba(0,0,0,.1)}
+.fb-summary{flex:1;font-size:12px;color:var(--light);line-height:1.5;min-width:0}
+.fb-price{font-size:17px;font-weight:700;color:var(--green);white-space:nowrap}
+.fb-btn{background:var(--green2);color:#fff;border:none;border-radius:8px;padding:12px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .2s;flex-shrink:0}
+.fb-btn:hover{background:var(--green)}
+.fb-btn:disabled{background:#ccc;cursor:not-allowed}
+.fb-back{background:#fff;color:var(--light);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0}
+.fb-back:hover{border-color:var(--green);color:var(--green)}
+
+/* ─── Badge ─── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-confirmed{background:#e0f2fe;color:#0369a1}
+.b-completed{background:var(--green-light);color:#166534}
+.b-cancelled{background:#fee2e2;color:#991b1b}
+
+/* ─── Admin ─── */
+.admin-hdr{background:#1a1a1a;color:#fff;padding:14px 0}
+.admin-hdr-inner{display:flex;justify-content:space-between;align-items:center}
+.admin-hdr-title{font-size:16px;font-weight:700}
+.admin-hdr-sub{font-size:11px;color:#aaa;margin-top:1px}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:14px;text-align:center}
+.stat-n{font-size:30px;font-weight:700;color:var(--green);font-family:'Nunito',sans-serif}
+.stat-l{font-size:12px;color:var(--muted);margin-top:2px}
+.a-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.a-tab{padding:11px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;flex-shrink:0}
+.a-tab.active{color:var(--green);border-bottom-color:var(--green)}
+.bk-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.bk-card:hover{border-color:var(--green);box-shadow:0 2px 8px rgba(33,182,92,.12)}
+.bk-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bk-name{font-weight:700;font-size:15px}
+.bk-id{font-size:11px;color:var(--muted)}
+.bk-body{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--light)}
+.fbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.fsel{padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;outline:none;color:var(--text)}
+.fsel:focus{border-color:var(--green)}
+.acal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.acal-cell{min-height:48px;border:1px solid var(--border);border-radius:6px;padding:5px;font-size:11px;background:#fff}
+.acal-cell.atoday{border-color:var(--green);background:var(--green-light)}
+.acal-cell .adate{font-weight:700;font-size:12px}
+.acal-dot{display:inline-block;background:var(--green);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-top:3px;cursor:pointer}
+.hol-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px}
+.hol-date{font-size:14px}
+
+/* ─── Modal ─── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{background:#fff;border-radius:12px;padding:22px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:16px;color:var(--muted);font-family:inherit}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+
+/* ─── Login ─── */
+.login-wrap{max-width:360px;margin:60px auto;padding:0 16px}
+.login-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:28px}
+.login-logo{text-align:center;margin-bottom:20px}
+.login-logo-circle{width:52px;height:52px;border-radius:50%;background:var(--green);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff}
+
+/* ─── Misc ─── */
+.lookup-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:10px}
+.empty-state{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.pb{padding-bottom:80px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .25s ease}
+
+/* ─── Weekly Calendar Table ─── */
+.week-cal-wrap{background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;margin-bottom:12px}
+.week-nav{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);background:#fafafa}
+.week-nav-btn{background:#fff;border:1px solid var(--green-border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--green);font-weight:600;font-family:inherit;transition:background .15s}
+.week-nav-btn:disabled{opacity:.3;cursor:not-allowed;color:var(--muted);border-color:var(--border)}
+.week-nav-btn:not(:disabled):hover{background:var(--green-light)}
+.week-month-label{font-size:14px;font-weight:700}
+.week-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.week-table{width:100%;border-collapse:collapse;font-size:12px;min-width:360px}
+.week-table th,.week-table td{border:1px solid #e8e8e8;text-align:center;padding:0}
+.wt-time-hd{background:#f5f5f5;padding:6px 4px;font-size:10px;color:var(--muted);width:40px;min-width:40px;position:sticky;left:0;z-index:3;border-right:2px solid var(--border)}
+.wt-day-hd{padding:5px 3px;background:#f5f5f5;min-width:42px}
+.wt-day-hd.wt-past{background:#efefef;color:#bbb}
+.wt-day-hd.wt-sel-col{background:var(--green-light)}
+.wt-day-num{font-size:13px;font-weight:700;line-height:1.3}
+.wt-day-num.sun{color:var(--red)}
+.wt-day-num.sat{color:#1e90ff}
+.wt-day-num.wt-past{color:#ccc}
+.wt-day-name{font-size:10px;color:var(--muted)}
+.wt-day-name.sun{color:var(--red)}
+.wt-day-name.sat{color:#1e90ff}
+.wt-time-cell{background:#f5f5f5;padding:3px 5px;font-size:10px;font-weight:600;color:var(--light);white-space:nowrap;position:sticky;left:0;z-index:1;border-right:2px solid var(--border)}
+.wt-cell{padding:5px 2px;background:#f5f5f5;height:32px}
+.wt-cell.wt-open{background:#fff;cursor:pointer}
+.wt-cell.wt-open:hover:not(.wt-sel){background:var(--green-light)}
+.wt-cell.wt-sel{background:var(--green)}
+.wt-mark{font-size:13px;font-weight:700;line-height:1;display:block}
+.wt-o{color:var(--green)}
+.wt-x{color:#d0d0d0}
+.wt-sel-mark{color:#fff}
+
+@media(max-width:480px){
+  .time-grid-avail{grid-template-columns:repeat(4,1fr)}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .stat-row>:last-child{grid-column:1/-1}
+  .staff-grid{grid-template-columns:1fr}
+  .menu-price{font-size:15px}
+  .fb-btn{padding:11px 12px;font-size:12px}
+  .wt-cell{height:28px}
+  .wt-mark{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+const STORE = {
+  name:'ドライヘッドスパ静岡あたまッチ',
+  addr:'〒420-0881 静岡県静岡市葵区北安東4-25-35',
+};
+
+const MENUS = [
+  {id:1, name:'至極の60分コース', price:6400, dur:60,
+   img:'画像/60分コース.jpg',
+   desc:'足・デコルテ・肩・首もゆっくりほぐし、心身ともにリラックス♪リクライニングソファで優しく丁寧に頭皮にアプローチ。首肩コリ・眼精疲労・緊張型頭痛・睡眠不足など自律神経の乱れによる不調や、ストレスから頭をスッキリさせたい方にオススメです。'},
+  {id:2, name:'贅沢80分コース', price:8000, dur:80,
+   img:'画像/80分コース.jpg',
+   desc:'施術後のスッキリ感が非常に高いロングコース。フット・ハンドマッサージとヘッドマッサージ延長を含む大満足の80分。日頃のお疲れをドライヘッドスパで解放し、至福のひとときをお過ごしください。当店で最もリピーター様の多いコースです。'},
+];
+
+const OPTIONS = [
+  {id:1, name:'ホットオプション',     price:1000, img:'画像/ホットオプション.jpg',
+   desc:'つら～い首肩コリの方におすすめ。首肩を温めながらドライヘッドスパともみほぐしを行い血行促進。'},
+  {id:2, name:'ハンド15分オプション', price:1500, img:'画像/ハンドオプション.png',
+   desc:'毛細血管や神経が集まる手をほぐすと深～いリラクゼーション効果。腕から指先を気持ちイイ強さでほぐします。'},
+];
+
+const STAFF = [
+  {id:0, name:'指名なし',   desc:'当日出勤のスタッフが施術します', photo:'画像/指名なし.png'},
+  {id:1, name:'鈴木 みほ', desc:'あたまッチ オーナーセラピスト',   photo:'画像/鈴木みほ.jpg'},
+  {id:2, name:'伊藤 なな', desc:'心を込めて丁寧に施術いたします', photo:'画像/伊藤なな.jpg'},
+];
+const REAL_STAFF = STAFF.filter(s => s.id !== 0);
+
+/* 09:00 〜 18:45、15分刻み */
+const TIMES = [];
+for(let h = 9; h <= 18; h++){
+  const maxM = h === 18 ? 46 : 60;
+  for(let m = 0; m < maxM; m += 15)
+    TIMES.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+}
+
+const MAX_DAYS  = 45;
+const WDAYS     = ['日','月','火','水','木','金','土'];
+const MONTHS_JP = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const STEPS     = ['メニュー選択','スタッフ・日時','予約確認','予約完了'];
+const ADMIN_PASS = 'admin';
+const LS_BK  = 'atamatch_bookings';
+const LS_HOL = 'atamatch_holidays';
+
+const GOOGLE_API_KEY = 'AIzaSyDzvzye_UE-9GMzjy83nCoF90HxBtoQbdE';
+const GAS_URL  = 'https://script.google.com/macros/s/AKfycbw5-BTUcHYwO-wdu3cc4KMRSy6HDwmp6cs9aawZCHw5nyC4eD6Qo0QdyMabpSh7qX4Y/exec';
+const LIFF_ID  = '2009822275-OSXMj70r';
+const GCAL_IDS = {
+  1: 'cf6f23a3b60fcae6ce7461683e6555e4776a772ee635094b0d00b114287b9446@group.calendar.google.com',
+  2: '14771c72e0ee1f3fc4276c96fa563444e035e167d601cfb2ef9f4833f09708de@group.calendar.google.com'
+};
+
+/* ═══════════════════════════════════════════
+   GOOGLE CALENDAR
+═══════════════════════════════════════════ */
+// 指定期間のイベントを取得（一般公開カレンダー）
+const fetchGCalEvents = async (calendarId, timeMin, timeMax) => {
+  const params = new URLSearchParams({
+    key: GOOGLE_API_KEY,
+    timeMin: timeMin.toISOString(),
+    timeMax: timeMax.toISOString(),
+    singleEvents: 'true',
+    orderBy: 'startTime',
+    maxResults: '500'
+  });
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('Google Calendar API error: ' + res.status);
+  const data = await res.json();
+  return data.items || [];
+};
+
+// スタッフIDに対応するGoogleカレンダーから「休日」と「予約済み時間」を取得
+// 戻り値: { holidays: ['YYYY-MM-DD', ...], busySlots: { 'YYYY-MM-DD': ['HH:MM', ...] } }
+const fetchGCalData = async (staffId) => {
+  const calId = GCAL_IDS[staffId];
+  if(!calId) return { holidays: [], busySlots: {} };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxDate = new Date(today); maxDate.setDate(today.getDate() + MAX_DAYS + 1);
+  try {
+    const events = await fetchGCalEvents(calId, today, maxDate);
+    console.log(`[GCal] staffId=${staffId} イベント件数=${events.length}`);
+    events.forEach(ev => console.log(`[GCal] staffId=${staffId}`, JSON.stringify({title: ev.summary, start: ev.start, end: ev.end, status: ev.status})));
+    const holidays = [];
+    const busySlots = {};
+    events.forEach(ev => {
+      if(ev.status === 'cancelled') return;
+      const start = ev.start;
+      const end   = ev.end;
+      if(!start) return;
+      // 終日イベント → 休日扱い
+      if(start.date && !start.dateTime) {
+        // 終日イベントは date が 'YYYY-MM-DD'
+        const s = new Date(start.date + 'T00:00:00');
+        const e = end?.date ? new Date(end.date + 'T00:00:00') : new Date(s.getTime() + 86400000);
+        for(let d = new Date(s); d < e; d.setDate(d.getDate()+1)) {
+          holidays.push(toStr(d));
+        }
+      } else if(start.dateTime) {
+        // 時刻付きイベント → 予約済みスロット扱い（40分インターバル込みでブロック）
+        const sdt = new Date(start.dateTime);
+        const edt = new Date(end.dateTime);
+        const edtWithBuffer = new Date(edt.getTime() + 40 * 60000);
+        const ds  = toStr(sdt);
+        if(!busySlots[ds]) busySlots[ds] = [];
+        const cur = new Date(sdt);
+        while(cur < edtWithBuffer) {
+          const t = `${String(cur.getHours()).padStart(2,'0')}:${String(cur.getMinutes()).padStart(2,'0')}`;
+          if(!busySlots[ds].includes(t)) busySlots[ds].push(t);
+          cur.setMinutes(cur.getMinutes() + 15);
+        }
+      }
+    });
+    return { holidays, busySlots };
+  } catch(e) {
+    console.warn('Google Calendar fetch failed:', e);
+    return { holidays: [], busySlots: {}, error: true };
+  }
+};
+
+// 予約をGoogleカレンダーに書き込む（Apps Script経由）
+const postToGCal = async (booking) => {
+  const staffId = booking.staffId;
+  // 指名なしの場合は書き込み不要
+  if(staffId === 0) return;
+  const menu  = MENUS.find(m => m.id === booking.menuId);
+  const opts  = booking.optIds.map(id => OPTIONS.find(o => o.id === id));
+  const staff = STAFF.find(s => s.id === staffId);
+  const dur   = (menu?.dur || 60) + opts.reduce((s,o) => s + (o.id===2 ? 15 : 0), 0) + 40;
+  const [hh, mm] = booking.time.split(':').map(Number);
+  const start = new Date(`${booking.date}T${booking.time}:00`);
+  const end   = new Date(start.getTime() + dur * 60000);
+  const total = (menu?.price||0) + opts.reduce((s,o)=>s+o.price,0);
+  const description = [
+    `予約番号: ${booking.id}`,
+    `お名前: ${booking.name}`,
+    `電話番号: ${booking.phone}`,
+    booking.email ? `メール: ${booking.email}` : '',
+    `メニュー: ${menu?.name}（${dur}分）`,
+    opts.length ? `オプション: ${opts.map(o=>o.name).join('、')}` : '',
+    `合計: ¥${total.toLocaleString()}`,
+    booking.notes ? `備考: ${booking.notes}` : '',
+  ].filter(Boolean).join('\n');
+
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        staffId: String(staffId),
+        title: `【予約】${booking.name} 様（${staff?.name}）`,
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        description
+      })
+    });
+  } catch(e) {
+    console.warn('Google Calendar write failed:', e);
+  }
+};
+
+// LINE予約確認メッセージ送信（Apps Script経由）
+const postLineConfirm = async (booking, lineUserId) => {
+  const menu  = MENUS.find(m => m.id === booking.menuId);
+  const opts  = booking.optIds.map(id => OPTIONS.find(o => o.id === id));
+  const staff = STAFF.find(s => s.id === booking.staffId);
+  const total = (menu?.price||0) + opts.reduce((s,o) => s+o.price, 0);
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'line_confirm',
+        lineUserId,
+        booking: {
+          id: booking.id,
+          date: booking.date,
+          time: booking.time,
+          name: booking.name,
+          menuName: menu?.name || '',
+          staffName: staff?.name || '当日担当スタッフ',
+          total,
+          optNames: opts.map(o=>o.name).join('、'),
+        }
+      })
+    });
+  } catch(e) {
+    console.warn('[LINE] notify failed:', e);
+  }
+};
+
+/* ═══════════════════════════════════════════
+   STORAGE
+═══════════════════════════════════════════ */
+const loadBk  = () => { try{ return JSON.parse(localStorage.getItem(LS_BK) ||'[]'); }catch{ return []; }};
+const saveBk  = b => localStorage.setItem(LS_BK,  JSON.stringify(b));
+const loadHol = () => { try{ return JSON.parse(localStorage.getItem(LS_HOL)||'[]'); }catch{ return []; }};
+const saveHol = h => localStorage.setItem(LS_HOL, JSON.stringify(h));
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+const fmt     = n => `¥${n.toLocaleString()}`;
+const toStr   = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fmtDate = s => { const d = new Date(s+'T00:00:00'); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WDAYS[d.getDay()]}）`; };
+const genId   = () => 'RSV-'+String(Math.floor(Math.random()*9000)+1000);
+
+/* ═══════════════════════════════════════════
+   AVAILABILITY
+═══════════════════════════════════════════ */
+// そのスタッフがその日に休日か
+const isOnHoliday = (holidays, sid, date) =>
+  holidays.some(h => h.staffId === sid && h.date === date);
+
+// 特定スタッフの空き時間（範囲ベース：40分インターバル対応）
+// newDur: 新規予約の総所要時間（コース + オプション + 40分）
+const getAvailTimesForStaff = (bookings, holidays, sid, date, gcalHolidays=[], gcalBusySlots={}, newDur=100) => {
+  if(isOnHoliday(holidays, sid, date)) return [];
+  if(gcalHolidays.includes(date)) return [];
+
+  // 既存予約を [start, end) の分単位範囲に変換（40分インターバル込み）
+  const busyRanges = bookings
+    .filter(b => b.date === date && b.status !== 'キャンセル' &&
+      (b.staffId === sid || b.staffId === 0))
+    .map(b => {
+      const menu = MENUS.find(m => m.id === b.menuId);
+      const hasHand = b.optIds.includes(2);
+      const dur = (menu?.dur || 60) + (hasHand ? 15 : 0) + 40;
+      const [h, m] = b.time.split(':').map(Number);
+      const start = h * 60 + m;
+      return { start, end: start + dur };
+    });
+
+  const gcalBlocked = new Set(gcalBusySlots[date] || []);
+
+  return TIMES.filter(t => {
+    const [th, tm] = t.split(':').map(Number);
+    const slotStart = th * 60 + tm;
+    const slotEnd   = slotStart + newDur;
+    // 新規予約の時間帯内にGcalブロックスロットがあればNG
+    for(let min = slotStart; min < slotEnd; min += 15) {
+      const bh = Math.floor(min / 60), bm = min % 60;
+      if(gcalBlocked.has(`${String(bh).padStart(2,'0')}:${String(bm).padStart(2,'0')}`)) return false;
+    }
+    // 既存予約と重複チェック
+    for(const r of busyRanges) {
+      if(slotStart < r.end && slotEnd > r.start) return false;
+    }
+    return true;
+  });
+};
+
+// 選択スタッフに応じた空き時間（指名なし=どちらかが空いていれば○）
+const getAvailTimes = (bookings, holidays, staffId, date, gcalData={}, newDur=100) => {
+  if(staffId === 0){
+    const avail = new Set();
+    REAL_STAFF.forEach(s => {
+      const d = gcalData[s.id] || {};
+      getAvailTimesForStaff(bookings, holidays, s.id, date, d.holidays||[], d.busySlots||{}, newDur)
+        .forEach(t => avail.add(t));
+    });
+    return TIMES.filter(t => avail.has(t));
+  }
+  const d = gcalData[staffId] || {};
+  return getAvailTimesForStaff(bookings, holidays, staffId, date, d.holidays||[], d.busySlots||{}, newDur);
+};
+
+const hasAvail = (bookings, holidays, staffId, date, gcalData={}, newDur=100) =>
+  getAvailTimes(bookings, holidays, staffId, date, gcalData, newDur).length > 0;
+
+/* ═══════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════ */
+function StatusBadge({st}) {
+  const cls = st==='確定'?'b-confirmed': st==='施術完了'?'b-completed':'b-cancelled';
+  return <span className={`badge ${cls}`}>{st}</span>;
+}
+
+function StepBar({cur}) {
+  return (
+    <div className="step-bar">
+      <div className="container">
+        <div className="step-list">
+          {STEPS.map((s,i) => {
+            const n = i+1, active = n===cur, done = n<cur;
+            return (
+              <div key={i} className={`step-item ${active?'active':''} ${done?'done':''}`}>
+                <div className="step-circle">{done?'✓':n}</div>
+                <div className="step-lbl">{s}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StoreHeader({onAdmin}) {
+  return (
+    <>
+      <div className="site-header">
+        <div className="container site-header-inner">
+          <div className="site-title">オンライン予約</div>
+          <button className="admin-btn" onClick={onAdmin}>管理者ページ</button>
+        </div>
+      </div>
+      <div className="store-block">
+        <div className="container store-inner">
+          <div className="store-img"><img src="画像/ロゴ（イラストのみ）.png" alt="Atamatch" style={{width:'100%',height:'100%',objectFit:'contain',padding:4}}/></div>
+          <div>
+            <div className="store-name">{STORE.name}</div>
+            <div className="store-sub">📍 {STORE.addr}</div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   STEP 1 : メニュー選択
+═══════════════════════════════════════════ */
+function Step1({selMenu, selOpts, onMenu, onOpt, onNext}) {
+  const menu      = MENUS.find(m => m.id === selMenu);
+  const optsTotal = selOpts.reduce((s,id) => s + (OPTIONS.find(o=>o.id===id)?.price||0), 0);
+  const total     = (menu?.price||0) + optsTotal;
+
+  return (
+    <div className="fu pb">
+      <div className="container">
+        <div className="section-head">
+          <div className="section-title">メニューを選択</div>
+          <div className="section-sub">ご希望のメニューを1つお選びください</div>
+        </div>
+        {MENUS.map(m => (
+          <div key={m.id} className={`menu-card ${selMenu===m.id?'selected':''}`}>
+            <div className="menu-card-body">
+              <div className="menu-card-top">
+                <div className="menu-card-img"><img src={m.img} alt={m.name}/></div>
+                <div className="menu-card-info">
+                  <div className="menu-card-name">{m.name}</div>
+                  <div className="menu-card-desc">{m.desc}</div>
+                  <div className="menu-card-meta">
+                    <span className="meta-item">施術時間{m.dur}分</span>
+                    <span className="menu-price">{fmt(m.price)}<span>（税込）</span></span>
+                  </div>
+                </div>
+              </div>
+              <button className={`select-btn ${selMenu===m.id?'sel':''}`}
+                onClick={() => onMenu(selMenu===m.id ? null : m.id)}>
+                {selMenu===m.id ? '✓ 選択中' : '選択する'}
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {selMenu && (
+          <div className="option-section fu">
+            <div className="option-title">オプションを追加（任意）</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginBottom:10,marginTop:-4}}>ドライヘッドスパの時間がより気持ち良くなるプラスメニュー</div>
+            {OPTIONS.map(o => {
+              const sel = selOpts.includes(o.id);
+              return (
+                <div key={o.id} className={`option-card ${sel?'selected':''}`} onClick={()=>onOpt(o.id)}>
+                  <div className="option-img"><img src={o.img} alt={o.name}/></div>
+                  <div className="option-info">
+                    <div className="option-name">{o.name}</div>
+                    <div className="option-desc">{o.desc}</div>
+                  </div>
+                  <div className="option-right">
+                    <div className="option-price">+{fmt(o.price)}</div>
+                    <div className="check-circle">{sel && '✓'}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="footer-bar">
+        <div className="fb-summary">
+          {selMenu
+            ? <><div style={{fontWeight:600,fontSize:13,color:'#1a1a1a'}}>{MENUS.find(m=>m.id===selMenu)?.name}</div>
+                {selOpts.length>0 && <div>{selOpts.map(id=>OPTIONS.find(o=>o.id===id)?.name).join('・')}</div>}</>
+            : <span>メニューを選択してください</span>}
+        </div>
+        {selMenu && <div className="fb-price">{fmt(total)}</div>}
+        <button className="fb-btn" disabled={!selMenu} onClick={onNext}>スタッフ・日時を選択 →</button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   STEP 2 : スタッフ・日時選択
+═══════════════════════════════════════════ */
+function Step2({selStaff, selDate, selTime, selMenu, selOpts, onStaff, onDate, onTime, onNext, onBack, bookings, holidays}) {
+  const today   = new Date(); today.setHours(0,0,0,0);
+  const now     = new Date();
+  const todayStr = toStr(today);
+  const maxDate = new Date(today); maxDate.setDate(today.getDate() + MAX_DAYS);
+
+  // 新規予約の総所要時間（コース + ハンドオプション + 40分インターバル）
+  const selMenuObj = MENUS.find(m => m.id === selMenu);
+  const hasHand = (selOpts || []).includes(2);
+  const newDur = (selMenuObj?.dur || 60) + (hasHand ? 15 : 0) + 40;
+
+  // 週の開始日を「今日」から始める
+  const [weekStart, setWeekStart] = useState(() => { const d = new Date(today); return d; });
+  const [gcalData,    setGcalData]    = useState({});
+  const [gcalLoading, setGcalLoading] = useState(true);
+  const [gcalError,   setGcalError]   = useState(false);
+
+  // 週の7日分
+  const weekDays = useMemo(() => {
+    return Array.from({length:7}, (_,i) => {
+      const d = new Date(weekStart); d.setDate(weekStart.getDate() + i); return d;
+    });
+  }, [weekStart]);
+
+  const canGoPrev = weekStart > today;
+  const canGoNext = weekDays[6] < maxDate;
+
+  // 月ラベル（週にまたがる場合は両方表示）
+  const monthLabel = useMemo(() => {
+    const s = weekDays[0], e = weekDays[6];
+    if(s.getMonth() === e.getMonth())
+      return `${s.getFullYear()}年 ${MONTHS_JP[s.getMonth()]}`;
+    return `${s.getFullYear()}年 ${MONTHS_JP[s.getMonth()]} / ${MONTHS_JP[e.getMonth()]}`;
+  }, [weekDays]);
+
+  /* スタッフ選択時にGoogleカレンダーデータを取得 */
+  useEffect(() => {
+    const ids = selStaff === 0 ? REAL_STAFF.map(s=>s.id) : [selStaff];
+    const needFetch = ids.filter(id => !gcalData[id]);
+    if(needFetch.length === 0) { setGcalLoading(false); return; }
+    setGcalLoading(true);
+    setGcalError(false);
+    Promise.all(needFetch.map(id => fetchGCalData(id).then(d => ({id, d}))))
+      .then(results => {
+        const hasErr = results.some(r => r.d.error);
+        setGcalError(hasErr);
+        setGcalData(prev => {
+          const next = {...prev};
+          results.forEach(({id, d}) => { next[id] = d; });
+          return next;
+        });
+      })
+      .catch(() => setGcalError(true))
+      .finally(() => setGcalLoading(false));
+  }, [selStaff]);
+
+  // 各セルの空き状態
+  const cellAvail = (ds) => {
+    const dt = new Date(ds + 'T00:00:00');
+    if(dt < today || dt > maxDate) return false;
+    return hasAvail(bookings, holidays, selStaff, ds, gcalData, newDur);
+  };
+
+  const timeAvail = (ds, t) => {
+    const dt = new Date(ds + 'T00:00:00');
+    if(dt < today || dt > maxDate) return false;
+    // 当日の過ぎた時間帯はNG
+    if(ds === todayStr) {
+      const [th, tm] = t.split(':').map(Number);
+      if(th * 60 + tm < now.getHours() * 60 + now.getMinutes()) return false;
+    }
+    return getAvailTimes(bookings, holidays, selStaff, ds, gcalData, newDur).includes(t);
+  };
+
+  const footerMsg = selDate===null ? '日時を選択してください（○のセル）'
+    : selTime===null ? `${fmtDate(selDate)}　時間を選択してください`
+    : `${fmtDate(selDate)} ${selTime}〜`;
+
+  return (
+    <div className="fu pb">
+      <div className="container">
+
+        {/* ── スタッフ選択 ── */}
+        <div style={{background:'var(--green)',color:'#fff',fontSize:14,fontWeight:700,
+          padding:'8px 16px',margin:'0 -16px 14px',letterSpacing:'.3px'}}>
+          スタッフ情報
+        </div>
+        <div className="staff-grid">
+          {STAFF.map(s => (
+            <div key={s.id}
+              className={`staff-card ${selStaff===s.id?'selected':''}`}
+              onClick={() => { onStaff(s.id); onDate(null); onTime(null); }}>
+              {selStaff===s.id && <span className="staff-sel-badge">選択中</span>}
+              <div className="staff-photo"><img src={s.photo} alt={s.name} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:6}}/></div>
+              <div className="staff-info">
+                <div className="staff-name">{s.name}</div>
+                <div className="staff-desc">{s.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Googleカレンダー読み込み中 ── */}
+        {gcalLoading && (
+          <div style={{textAlign:'center',padding:'16px 0',fontSize:13,color:'var(--muted)'}}>
+            📅 カレンダー情報を取得中…
+          </div>
+        )}
+
+        {/* ── 取得エラー時 ── */}
+        {!gcalLoading && gcalError && (
+          <div style={{textAlign:'center',padding:'10px 14px',fontSize:12,color:'#b45309',
+            background:'#fffbeb',border:'1px solid #fcd34d',borderRadius:6,marginBottom:8}}>
+            ⚠️ Googleカレンダーの取得に失敗しました。手動登録の休日のみ反映しています。
+          </div>
+        )}
+
+        {/* ── 週間カレンダーテーブル ── */}
+        {!gcalLoading && (
+          <div className="fu">
+            <div className="section-head" style={{paddingTop:12}}>
+              <div className="section-title">希望日時選択</div>
+              <div className="section-sub">ご希望の来店日時の○を選択してください。</div>
+            </div>
+
+            <div className="week-cal-wrap">
+              <div className="week-nav">
+                <button className="week-nav-btn" disabled={!canGoPrev}
+                  onClick={() => { const d=new Date(weekStart); d.setDate(d.getDate()-7); setWeekStart(d); onDate(null); onTime(null); }}>
+                  前の一週間
+                </button>
+                <div className="week-month-label">{monthLabel}</div>
+                <button className="week-nav-btn" disabled={!canGoNext}
+                  onClick={() => { const d=new Date(weekStart); d.setDate(d.getDate()+7); setWeekStart(d); onDate(null); onTime(null); }}>
+                  次の一週間
+                </button>
+              </div>
+
+              <div className="week-table-wrap">
+                <table className="week-table">
+                  <thead>
+                    <tr>
+                      <th className="wt-time-hd">日時</th>
+                      {weekDays.map((d,i) => {
+                        const ds  = toStr(d);
+                        const dow = d.getDay(); // 0=日,6=土
+                        const isPast = d < today;
+                        const isSel  = selDate === ds;
+                        const dayLabel = WDAYS[dow];
+                        return (
+                          <th key={i} className={`wt-day-hd ${isPast?'wt-past':''} ${isSel?'wt-sel-col':''}`}>
+                            <div className={`wt-day-num ${dow===0?'sun':''} ${dow===6?'sat':''} ${isPast?'wt-past':''}`}>
+                              {d.getDate()}
+                            </div>
+                            <div className={`wt-day-name ${dow===0?'sun':''} ${dow===6?'sat':''}`}>{dayLabel}</div>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {TIMES.map(t => (
+                      <tr key={t}>
+                        <td className="wt-time-cell">{t}</td>
+                        {weekDays.map((d,i) => {
+                          const ds   = toStr(d);
+                          const avail = cellAvail(ds) && timeAvail(ds, t);
+                          const sel   = selDate===ds && selTime===t;
+                          return (
+                            <td key={i}
+                              className={`wt-cell ${avail?'wt-open':''} ${sel?'wt-sel':''}`}
+                              onClick={() => avail && (onDate(ds), onTime(t))}>
+                              <span className={`wt-mark ${sel?'wt-sel-mark': avail?'wt-o':'wt-x'}`}>
+                                {sel ? '●' : avail ? '○' : '×'}
+                              </span>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>{/* /container */}
+
+      <div className="footer-bar">
+        <button className="fb-back" onClick={onBack}>← 戻る</button>
+        <div className="fb-summary" style={{textAlign:'center',fontSize:12}}>
+          {footerMsg}
+        </div>
+        <button className="fb-btn"
+          disabled={!selDate || !selTime}
+          onClick={onNext}>
+          予約内容確認 →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   STEP 3 : 予約確認 + お客様情報
+═══════════════════════════════════════════ */
+function Step3({selMenu, selOpts, selStaff, selDate, selTime, info, onChange, onConfirm, onBack}) {
+  const [errs, setErrs] = useState({});
+  const menu  = MENUS.find(m => m.id === selMenu);
+  const opts  = selOpts.map(id => OPTIONS.find(o => o.id === id));
+  const staff = STAFF.find(s => s.id === selStaff);
+  const total = (menu?.price||0) + opts.reduce((s,o) => s+o.price, 0);
+
+  const validate = () => {
+    const e = {};
+    if(!info.name.trim())  e.name  = '氏名を入力してください';
+    if(!info.phone.trim()) e.phone = '電話番号を入力してください';
+    else if(!/^[\d]{10,11}$/.test(info.phone.replace(/[\s\-]/g,'')))
+      e.phone = '正しい電話番号を入力してください';
+    setErrs(e);
+    return !Object.keys(e).length;
+  };
+
+  return (
+    <div className="fu pb">
+      <div className="container">
+        <div className="section-head">
+          <div className="section-title">予約内容の確認</div>
+          <div className="section-sub">お客様情報を入力し、内容をご確認ください</div>
+        </div>
+
+        <div className="confirm-card">
+          <div className="confirm-row"><span className="c-key">メニュー</span><span className="c-val">{menu?.name}</span></div>
+          {opts.length>0 && <div className="confirm-row"><span className="c-key">オプション</span><span className="c-val">{opts.map(o=>o.name).join('、')}</span></div>}
+          <div className="confirm-row"><span className="c-key">担当</span><span className="c-val">{staff?.name}</span></div>
+          <div className="confirm-row"><span className="c-key">日時</span><span className="c-val">{fmtDate(selDate)} {selTime}〜</span></div>
+          <div className="confirm-row" style={{borderTop:'2px solid #f0f0f0',marginTop:4}}>
+            <span className="c-key" style={{fontWeight:700}}>合計金額</span>
+            <span className="c-val c-total">{fmt(total)}<span style={{fontSize:12,fontWeight:400,color:'var(--muted)'}}>（税込）</span></span>
+          </div>
+        </div>
+
+        <div className="form-card">
+          <div className="form-card-title">お客様情報</div>
+          <div className="form-group">
+            <label className="form-label">氏名 <span className="req-tag">必須</span></label>
+            <input className={`form-input ${errs.name?'err':''}`} placeholder="山田 花子" value={info.name} onChange={e=>onChange('name',e.target.value)}/>
+            {errs.name && <div className="err-msg">{errs.name}</div>}
+          </div>
+          <div className="form-group">
+            <label className="form-label">電話番号 <span className="req-tag">必須</span></label>
+            <input className={`form-input ${errs.phone?'err':''}`} placeholder="09012345678" value={info.phone} onChange={e=>onChange('phone',e.target.value)} type="tel"/>
+            {errs.phone && <div className="err-msg">{errs.phone}</div>}
+          </div>
+          <div className="form-group">
+            <label className="form-label">メールアドレス <span className="opt-tag">任意</span></label>
+            <input className="form-input" placeholder="sample@example.com" value={info.email} onChange={e=>onChange('email',e.target.value)} type="email"/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">ご要望・メモ <span className="opt-tag">任意</span></label>
+            <textarea className="form-input" placeholder="アレルギーや特別なご要望があればご記入ください" value={info.notes} onChange={e=>onChange('notes',e.target.value)}/>
+          </div>
+        </div>
+      </div>
+
+      <div className="footer-bar">
+        <button className="fb-back" onClick={onBack}>← 戻る</button>
+        <button className="fb-btn" style={{flex:1,maxWidth:260}} onClick={() => validate() && onConfirm()}>
+          ✓ 予約を確定する
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   STEP 4 : 予約完了
+═══════════════════════════════════════════ */
+function Step4({booking, onReset, onLookup}) {
+  const menu  = MENUS.find(m => m.id === booking.menuId);
+  const opts  = booking.optIds.map(id => OPTIONS.find(o => o.id === id));
+  const staff = STAFF.find(s => s.id === booking.staffId);
+  const total = (menu?.price||0) + opts.reduce((s,o) => s+o.price, 0);
+  return (
+    <div className="fu pb">
+      <div className="container">
+        <div className="complete-wrap">
+          <div className="complete-icon">✓</div>
+          <div style={{fontSize:20,fontWeight:700,marginBottom:4}}>ご予約が確定しました</div>
+          <div style={{fontSize:13,color:'var(--muted)',marginBottom:16}}>ご来店をお待ちしております</div>
+          <div style={{fontSize:12,color:'var(--muted)'}}>予約番号</div>
+          <div className="rsv-id">{booking.id}</div>
+          <div className="confirm-card" style={{textAlign:'left',marginBottom:24}}>
+            <div className="confirm-row"><span className="c-key">メニュー</span><span className="c-val">{menu?.name}</span></div>
+            {opts.length>0 && <div className="confirm-row"><span className="c-key">オプション</span><span className="c-val">{opts.map(o=>o.name).join('、')}</span></div>}
+            <div className="confirm-row"><span className="c-key">担当</span><span className="c-val">{staff?.name}</span></div>
+            <div className="confirm-row"><span className="c-key">日時</span><span className="c-val">{fmtDate(booking.date)} {booking.time}〜</span></div>
+            <div className="confirm-row"><span className="c-key">お名前</span><span className="c-val">{booking.name}</span></div>
+            <div className="confirm-row" style={{borderBottom:'none'}}>
+              <span className="c-key">合計</span>
+              <span className="c-val" style={{color:'var(--green)',fontWeight:700,fontSize:16}}>{fmt(total)}</span>
+            </div>
+          </div>
+          {!booking.lineUserId && (
+            <div style={{background:'#f0fff4',border:'1px solid #b2e8c8',borderRadius:8,padding:'12px 16px',marginBottom:20,fontSize:12,color:'#555',textAlign:'center',lineHeight:1.8}}>
+              📱 LINE公式アカウントから予約すると<br/>予約確認・前日リマインドが届きます
+            </div>
+          )}
+          <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:300,margin:'0 auto'}}>
+            <button className="fb-btn" style={{width:'100%'}} onClick={onReset}>新規予約へ</button>
+            <button className="fb-back" style={{width:'100%'}} onClick={onLookup}>予約の確認・キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   LOOKUP（予約確認・キャンセル）
+═══════════════════════════════════════════ */
+function Lookup({bookings, onUpdate, onBack}) {
+  const [id,setId]         = useState('');
+  const [phone,setPhone]   = useState('');
+  const [res,setRes]       = useState(null);
+  const [err,setErr]       = useState('');
+  const [confirm,setConfirm] = useState(false);
+
+  const search = () => {
+    setErr(''); setRes(null);
+    const f = bookings.find(b => b.id === id.toUpperCase().trim() && b.phone === phone.trim());
+    f ? setRes(f) : setErr('予約が見つかりませんでした。予約番号と電話番号をご確認ください。');
+  };
+  const cancel = () => { onUpdate(res.id,'キャンセル'); setRes({...res,status:'キャンセル'}); setConfirm(false); };
+  const menu  = res ? MENUS.find(m => m.id === res.menuId)  : null;
+  const opts  = res ? res.optIds.map(id => OPTIONS.find(o => o.id === id)) : [];
+  const staff = res ? STAFF.find(s => s.id === res.staffId) : null;
+  const total = res ? (menu?.price||0) + opts.reduce((s,o)=>s+o.price,0) : 0;
+
+  return (
+    <div className="fu pb">
+      <div className="container">
+        <div className="section-head">
+          <div className="section-title">予約の確認・キャンセル</div>
+          <div className="section-sub">予約番号と電話番号でご予約を検索できます</div>
+        </div>
+        <div className="lookup-card">
+          <div className="form-group">
+            <label className="form-label">予約番号</label>
+            <input className="form-input" placeholder="RSV-1234" value={id} onChange={e=>setId(e.target.value)}/>
+          </div>
+          <div className="form-group" style={{marginBottom:0}}>
+            <label className="form-label">登録電話番号</label>
+            <input className="form-input" placeholder="09012345678" value={phone} onChange={e=>setPhone(e.target.value)} type="tel"/>
+          </div>
+        </div>
+        {err && <div style={{color:'var(--red)',fontSize:13,textAlign:'center',marginBottom:12}}>{err}</div>}
+        {res && (
+          <div className="confirm-card fu">
+            <div className="confirm-row">
+              <span className="c-key">予約番号</span>
+              <span className="c-val" style={{display:'flex',alignItems:'center',gap:8}}>{res.id} <StatusBadge st={res.status}/></span>
+            </div>
+            <div className="confirm-row"><span className="c-key">メニュー</span><span className="c-val">{menu?.name}</span></div>
+            {opts.length>0 && <div className="confirm-row"><span className="c-key">オプション</span><span className="c-val">{opts.map(o=>o.name).join('、')}</span></div>}
+            <div className="confirm-row"><span className="c-key">担当</span><span className="c-val">{staff?.name}</span></div>
+            <div className="confirm-row"><span className="c-key">日時</span><span className="c-val">{fmtDate(res.date)} {res.time}</span></div>
+            <div className="confirm-row"><span className="c-key">お名前</span><span className="c-val">{res.name}</span></div>
+            <div className="confirm-row" style={{borderBottom:'none'}}><span className="c-key">合計</span><span className="c-val" style={{color:'var(--green)',fontWeight:700}}>{fmt(total)}</span></div>
+            {res.status==='確定' && (
+              <div style={{padding:'0 16px 12px'}}>
+                {!confirm
+                  ? <button style={{background:'#fee2e2',color:'#991b1b',border:'1px solid #fca5a5',borderRadius:6,padding:'8px 16px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}
+                      onClick={()=>setConfirm(true)}>キャンセルする</button>
+                  : <div>
+                      <div style={{fontSize:13,color:'var(--red)',marginBottom:8}}>本当にキャンセルしますか？</div>
+                      <div style={{display:'flex',gap:8}}>
+                        <button style={{background:'#fff',border:'1px solid var(--border)',borderRadius:6,padding:'7px 14px',fontSize:12,cursor:'pointer',fontFamily:'inherit'}} onClick={()=>setConfirm(false)}>戻る</button>
+                        <button style={{background:'var(--red)',color:'#fff',border:'none',borderRadius:6,padding:'7px 14px',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}} onClick={cancel}>キャンセルを確定</button>
+                      </div>
+                    </div>
+                }
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="footer-bar">
+        <button className="fb-back" onClick={onBack}>← 戻る</button>
+        <button className="fb-btn" onClick={search}>予約を検索する</button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   CUSTOMER APP
+═══════════════════════════════════════════ */
+function CustomerApp({bookings, holidays, onAdd, onUpdate, onAdmin}) {
+  const [step,setStep]       = useState(1);
+  const [selMenu,setSelMenu] = useState(null);
+  const [selOpts,setSelOpts] = useState([]);
+  const [selStaff,setSelStaff] = useState(0);
+  const [selDate,setSelDate] = useState(null);
+  const [selTime,setSelTime] = useState(null);
+  const [info,setInfo]       = useState({name:'',phone:'',email:'',notes:''});
+  const [done,setDone]       = useState(null);
+  const [lookup,setLookup]   = useState(false);
+  const [lineUserId,setLineUserId] = useState(null);
+
+  useEffect(() => {
+    if (typeof liff === 'undefined') return;
+    liff.init({ liffId: LIFF_ID })
+      .then(() => { if (liff.isLoggedIn()) return liff.getProfile(); })
+      .then(p => { if (p) setLineUserId(p.userId); })
+      .catch(e => console.warn('[LIFF]', e));
+  }, []);
+
+  const toggleOpt = id => setSelOpts(p => p.includes(id) ? p.filter(x=>x!==id) : [...p,id]);
+  const updInfo   = (k,v) => setInfo(p => ({...p,[k]:v}));
+
+  const confirm = () => {
+    const b = {
+      id:genId(), menuId:selMenu, optIds:selOpts, staffId:selStaff,
+      date:selDate, time:selTime,
+      name:info.name, phone:info.phone, email:info.email, notes:info.notes,
+      lineUserId: lineUserId || null,
+      status:'確定', at:new Date().toISOString()
+    };
+    onAdd(b); setDone(b); setStep(4);
+    postToGCal(b);
+    if (lineUserId) postLineConfirm(b, lineUserId);
+  };
+
+  const reset = () => {
+    setStep(1); setSelMenu(null); setSelOpts([]); setSelStaff(null);
+    setSelDate(null); setSelTime(null); setInfo({name:'',phone:'',email:'',notes:''});
+    setDone(null); setLookup(false);
+  };
+
+  if(lookup) return (
+    <><StoreHeader onAdmin={onAdmin}/>
+    <Lookup bookings={bookings} onUpdate={onUpdate} onBack={()=>setLookup(false)}/></>
+  );
+
+  return (
+    <>
+      <StoreHeader onAdmin={onAdmin}/>
+      {step < 4 && <StepBar cur={step}/>}
+      {step===1 && <Step1 selMenu={selMenu} selOpts={selOpts}
+        onMenu={id=>{setSelMenu(id); if(!id)setSelOpts([]);}}
+        onOpt={toggleOpt} onNext={()=>setStep(2)}/>}
+      {step===2 && <Step2
+        selStaff={selStaff} selDate={selDate} selTime={selTime}
+        selMenu={selMenu} selOpts={selOpts}
+        onStaff={setSelStaff} onDate={setSelDate} onTime={setSelTime}
+        onNext={()=>setStep(3)} onBack={()=>setStep(1)}
+        bookings={bookings} holidays={holidays}/>}
+      {step===3 && <Step3
+        selMenu={selMenu} selOpts={selOpts} selStaff={selStaff}
+        selDate={selDate} selTime={selTime}
+        info={info} onChange={updInfo}
+        onConfirm={confirm} onBack={()=>setStep(2)}/>}
+      {step===4 && <Step4 booking={done} onReset={reset} onLookup={()=>setLookup(true)}/>}
+      {step===1 && (
+        <div className="container" style={{paddingBottom:90,textAlign:'center'}}>
+          <button style={{background:'none',border:'none',color:'var(--muted)',fontSize:12,cursor:'pointer',textDecoration:'underline'}}
+            onClick={()=>setLookup(true)}>既存の予約を確認・キャンセルする</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN LOGIN
+═══════════════════════════════════════════ */
+function AdminLogin({onLogin}) {
+  const [pw,setPw]   = useState('');
+  const [err,setErr] = useState('');
+  const sub = e => { e.preventDefault(); pw===ADMIN_PASS ? onLogin() : setErr('パスワードが違います'); };
+  return (
+    <>
+      <div className="site-header"><div className="container site-header-inner"><div className="site-title">管理者ログイン</div></div></div>
+      <div className="login-wrap">
+        <div className="login-card">
+          <div className="login-logo">
+            <div className="login-logo-circle">🔐</div>
+            <div style={{fontWeight:700,fontSize:16}}>管理者ログイン</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>デモ用パスワード：admin</div>
+          </div>
+          <form onSubmit={sub}>
+            <div className="form-group">
+              <label className="form-label">パスワード</label>
+              <input className={`form-input ${err?'err':''}`} type="password" value={pw}
+                onChange={e=>{setPw(e.target.value);setErr('');}} placeholder="パスワードを入力" autoFocus/>
+              {err && <div className="err-msg">{err}</div>}
+            </div>
+            <button type="submit" className="fb-btn" style={{width:'100%'}}>ログインする</button>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN : スタッフ休日設定
+═══════════════════════════════════════════ */
+function AdminHolidays({holidays, onAdd, onRemove}) {
+  const [selSid, setSelSid] = useState(1);
+  const [date,   setDate]   = useState('');
+  const [err,    setErr]    = useState('');
+
+  const today = toStr(new Date());
+  const staffHols = holidays
+    .filter(h => h.staffId === selSid)
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  const add = () => {
+    if(!date){ setErr('日付を入力してください'); return; }
+    if(date < today){ setErr('過去の日付は登録できません'); return; }
+    if(holidays.some(h => h.staffId===selSid && h.date===date)){ setErr('既に登録されています'); return; }
+    onAdd({staffId:selSid, date});
+    setDate(''); setErr('');
+  };
+
+  return (
+    <div className="fu">
+      {/* スタッフ切替 */}
+      <div style={{display:'flex',gap:8,marginBottom:16}}>
+        {REAL_STAFF.map(s => (
+          <button key={s.id}
+            style={{
+              padding:'9px 20px',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer',
+              fontFamily:'inherit',border:'none',
+              background: selSid===s.id ? 'var(--green)' : '#fff',
+              color:      selSid===s.id ? '#fff' : 'var(--light)',
+              boxShadow:  selSid===s.id ? 'none' : '0 0 0 1px var(--border) inset',
+            }}
+            onClick={() => { setSelSid(s.id); setErr(''); }}>
+            {s.name}
+          </button>
+        ))}
+      </div>
+
+      {/* 追加フォーム */}
+      <div className="form-card" style={{marginBottom:16}}>
+        <div className="form-card-title">
+          休日を追加 — {REAL_STAFF.find(s=>s.id===selSid)?.name}
+        </div>
+        <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
+          <div style={{flex:1}}>
+            <input type="date" className={`form-input ${err?'err':''}`}
+              value={date} min={today}
+              onChange={e=>{setDate(e.target.value);setErr('');}}/>
+            {err && <div className="err-msg">{err}</div>}
+          </div>
+          <button className="fb-btn" style={{padding:'10px 16px',flexShrink:0}} onClick={add}>追加</button>
+        </div>
+      </div>
+
+      {/* 休日一覧 */}
+      <div style={{fontSize:13,fontWeight:700,color:'var(--light)',marginBottom:8}}>
+        登録済み休日 — {REAL_STAFF.find(s=>s.id===selSid)?.name}
+      </div>
+      {staffHols.length === 0
+        ? <div className="empty-state" style={{padding:'20px 0'}}>登録された休日はありません</div>
+        : staffHols.map(h => (
+            <div key={h.date} className="hol-item">
+              <span className="hol-date">{fmtDate(h.date)}</span>
+              <button
+                onClick={() => onRemove(h.staffId, h.date)}
+                style={{background:'#fee2e2',color:'#991b1b',border:'1px solid #fca5a5',
+                  borderRadius:6,padding:'5px 12px',fontSize:12,fontWeight:600,
+                  cursor:'pointer',fontFamily:'inherit'}}>
+                削除
+              </button>
+            </div>
+          ))
+      }
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN DASHBOARD
+═══════════════════════════════════════════ */
+function AdminDashboard({bookings, holidays, onUpdate, onAddHol, onRemoveHol, onLogout}) {
+  const [tab,   setTab]   = useState('today');
+  const [sel,   setSel]   = useState(null);
+  const [fDate, setFDate] = useState('');
+  const [fStaff,setFStaff]= useState('');
+  const [fStat, setFStat] = useState('');
+  const [calV,  setCalV]  = useState(new Date());
+
+  const todayStr  = toStr(new Date());
+  const todayBk   = bookings.filter(b=>b.date===todayStr).sort((a,b)=>a.time.localeCompare(b.time));
+  const doneCnt   = todayBk.filter(b=>b.status==='施術完了').length;
+  const totalValid= bookings.filter(b=>b.status!=='キャンセル').length;
+
+  const filtered = bookings.filter(b => {
+    if(fDate  && b.date !== fDate) return false;
+    if(fStaff && String(b.staffId) !== fStaff) return false;
+    if(fStat  && b.status !== fStat) return false;
+    return true;
+  }).sort((a,b) => b.date.localeCompare(a.date) || a.time.localeCompare(b.time));
+
+  const cy = calV.getFullYear(), cm = calV.getMonth();
+  const cFirst = new Date(cy,cm,1).getDay(), cDays = new Date(cy,cm+1,0).getDate();
+  const cCells = []; for(let i=0;i<cFirst;i++) cCells.push(null); for(let d=1;d<=cDays;d++) cCells.push(d);
+  const countDay = d => { if(!d) return 0; const s=toStr(new Date(cy,cm,d)); return bookings.filter(b=>b.date===s&&b.status!=='キャンセル').length; };
+
+  const chSt = (id,st) => { onUpdate(id,st); setSel(p => p ? {...p,status:st} : null); };
+
+  /* 予約カード */
+  const BkCard = ({b,onClick}) => {
+    const menu  = MENUS.find(m=>m.id===b.menuId);
+    const opts  = b.optIds.map(id=>OPTIONS.find(o=>o.id===id));
+    const staff = STAFF.find(s=>s.id===b.staffId);
+    const total = (menu?.price||0) + opts.reduce((s,o)=>s+o.price,0);
+    return (
+      <div className="bk-card" onClick={onClick}>
+        <div className="bk-card-head">
+          <div><div className="bk-name">{b.name}</div><div className="bk-id">{b.id}</div></div>
+          <StatusBadge st={b.status}/>
+        </div>
+        <div className="bk-body">
+          <span>📅 {fmtDate(b.date)} {b.time}</span>
+          <span>👤 {staff?.name}</span>
+          <span>💆 {menu?.name}</span>
+          {opts.length>0 && <span>＋{opts.map(o=>o.name).join('・')}</span>}
+          <span style={{color:'var(--green)',fontWeight:700}}>{fmt(total)}</span>
+        </div>
+      </div>
+    );
+  };
+
+  /* モーダル内容 */
+  const ModalContent = ({b}) => {
+    if(!b) return null;
+    const menu  = MENUS.find(m=>m.id===b.menuId);
+    const opts  = b.optIds.map(id=>OPTIONS.find(o=>o.id===id));
+    const staff = STAFF.find(s=>s.id===b.staffId);
+    const total = (menu?.price||0)+opts.reduce((s,o)=>s+o.price,0);
+    const btnStyle = (bg,c,bc) => ({background:bg,color:c,border:`1px solid ${bc}`,borderRadius:6,padding:'8px 14px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'});
+    return (
+      <>
+        <div className="modal-head">
+          <div className="modal-title">{b.id}</div>
+          <button className="modal-close" onClick={()=>setSel(null)}>✕</button>
+        </div>
+        <div className="confirm-card">
+          <div className="confirm-row"><span className="c-key">ステータス</span><span className="c-val"><StatusBadge st={b.status}/></span></div>
+          <div className="confirm-row"><span className="c-key">お名前</span><span className="c-val">{b.name}</span></div>
+          <div className="confirm-row"><span className="c-key">電話番号</span><span className="c-val">{b.phone}</span></div>
+          {b.email && <div className="confirm-row"><span className="c-key">メール</span><span className="c-val">{b.email}</span></div>}
+          <div className="confirm-row"><span className="c-key">担当</span><span className="c-val">{staff?.name}</span></div>
+          <div className="confirm-row"><span className="c-key">日時</span><span className="c-val">{fmtDate(b.date)} {b.time}</span></div>
+          <div className="confirm-row"><span className="c-key">メニュー</span><span className="c-val">{menu?.name}</span></div>
+          {opts.length>0 && <div className="confirm-row"><span className="c-key">オプション</span><span className="c-val">{opts.map(o=>o.name).join('、')}</span></div>}
+          {b.notes && <div className="confirm-row"><span className="c-key">備考</span><span className="c-val">{b.notes}</span></div>}
+          <div className="confirm-row" style={{borderBottom:'none'}}><span className="c-key">合計金額</span><span className="c-val c-total">{fmt(total)}</span></div>
+        </div>
+        <div className="modal-acts">
+          <button onClick={()=>setSel(null)} style={btnStyle('#fff','var(--light)','var(--border)')}>閉じる</button>
+          {b.status==='確定' && <>
+            <button onClick={()=>chSt(b.id,'施術完了')} style={btnStyle('var(--green-light)','var(--green)','var(--green-border)')}>施術完了</button>
+            <button onClick={()=>chSt(b.id,'キャンセル')} style={btnStyle('#fee2e2','#991b1b','#fca5a5')}>キャンセル</button>
+          </>}
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <>
+      <div className="admin-hdr">
+        <div className="container admin-hdr-inner">
+          <div>
+            <div className="admin-hdr-title">{STORE.name}</div>
+            <div className="admin-hdr-sub">管理者ダッシュボード</div>
+          </div>
+          <button className="admin-btn" onClick={onLogout}>ログアウト</button>
+        </div>
+      </div>
+
+      <div className="container" style={{paddingTop:20,paddingBottom:40}}>
+        <div className="stat-row">
+          <div className="stat-card"><div className="stat-n">{todayBk.length}</div><div className="stat-l">本日の予約</div></div>
+          <div className="stat-card"><div className="stat-n">{doneCnt}</div><div className="stat-l">施術完了</div></div>
+          <div className="stat-card"><div className="stat-n">{totalValid}</div><div className="stat-l">総予約数</div></div>
+        </div>
+
+        <div className="a-tabs">
+          {[['today','本日の予約'],['cal','カレンダー'],['all','予約一覧'],['hol','休日設定']].map(([k,l]) => (
+            <div key={k} className={`a-tab ${tab===k?'active':''}`} onClick={()=>setTab(k)}>{l}</div>
+          ))}
+        </div>
+
+        {/* 本日の予約 */}
+        {tab==='today' && (
+          <div className="fu">
+            {todayBk.length===0
+              ? <div className="empty-state">本日の予約はありません</div>
+              : todayBk.map(b => <BkCard key={b.id} b={b} onClick={()=>setSel(b)}/>)}
+          </div>
+        )}
+
+        {/* カレンダー */}
+        {tab==='cal' && (
+          <div className="cal-wrap fu">
+            <div className="cal-head">
+              <button className="cal-nav" onClick={()=>setCalV(new Date(cy,cm-1,1))}>‹</button>
+              <div className="cal-month-label">{cy}年 {MONTHS_JP[cm]}</div>
+              <button className="cal-nav" onClick={()=>setCalV(new Date(cy,cm+1,1))}>›</button>
+            </div>
+            <div className="acal-grid" style={{padding:'8px'}}>
+              {WDAYS.map(d => <div key={d} style={{textAlign:'center',fontSize:11,color:'var(--muted)',padding:'4px 0',fontWeight:600}}>{d}</div>)}
+              {cCells.map((d,i) => {
+                const cnt = countDay(d);
+                const ds  = d ? toStr(new Date(cy,cm,d)) : '';
+                return (
+                  <div key={i} className={`acal-cell ${ds===todayStr?'atoday':''}`}>
+                    {d && <>
+                      <div className="adate" style={{
+                        color: new Date(cy,cm,d).getDay()===0 ? 'var(--red)'
+                          : new Date(cy,cm,d).getDay()===6 ? '#1e90ff' : ''}}>{d}</div>
+                      {cnt>0 && <span className="acal-dot" onClick={()=>{setTab('all');setFDate(ds);}}>{cnt}件</span>}
+                    </>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 予約一覧 */}
+        {tab==='all' && (
+          <div className="fu">
+            <div className="fbar">
+              <input type="date" className="fsel" value={fDate} onChange={e=>setFDate(e.target.value)}/>
+              <select className="fsel" value={fStaff} onChange={e=>setFStaff(e.target.value)}>
+                <option value="">担当：すべて</option>
+                {STAFF.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <select className="fsel" value={fStat} onChange={e=>setFStat(e.target.value)}>
+                <option value="">ステータス：すべて</option>
+                <option value="確定">確定</option>
+                <option value="施術完了">施術完了</option>
+                <option value="キャンセル">キャンセル</option>
+              </select>
+              {(fDate||fStaff||fStat) && <button className="fb-back" style={{fontSize:12,padding:'6px 12px'}} onClick={()=>{setFDate('');setFStaff('');setFStat('');}}>クリア</button>}
+            </div>
+            {filtered.length===0
+              ? <div className="empty-state">予約が見つかりません</div>
+              : filtered.map(b => <BkCard key={b.id} b={b} onClick={()=>setSel(b)}/>)}
+          </div>
+        )}
+
+        {/* 休日設定 */}
+        {tab==='hol' && (
+          <AdminHolidays holidays={holidays} onAdd={onAddHol} onRemove={onRemoveHol}/>
+        )}
+      </div>
+
+      {sel && (
+        <div className="modal-bg" onClick={()=>setSel(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <ModalContent b={sel}/>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   ROOT APP
+═══════════════════════════════════════════ */
+function App() {
+  const [page,      setPage]     = useState(() => window.location.hash==='#admin' ? 'adminLogin' : 'customer');
+  const [loggedIn,  setLoggedIn] = useState(false);
+  const [bookings,  setBookings] = useState(() => loadBk());
+  const [holidays,  setHolidays] = useState(() => loadHol());
+
+  useEffect(() => saveBk(bookings),   [bookings]);
+  useEffect(() => saveHol(holidays),  [holidays]);
+
+  useEffect(() => {
+    const h = () => {
+      if(window.location.hash==='#admin' && !loggedIn) setPage('adminLogin');
+      if(window.location.hash==='' && page!=='customer') setPage('customer');
+    };
+    window.addEventListener('hashchange', h);
+    return () => window.removeEventListener('hashchange', h);
+  }, [loggedIn, page]);
+
+  const addBk    = b  => setBookings(p => [...p, b]);
+  const updBk    = (id,st) => setBookings(p => p.map(b => b.id===id ? {...b,status:st} : b));
+  const addHol   = h  => setHolidays(p => [...p, h]);
+  const removeHol= (sid,date) => setHolidays(p => p.filter(h => !(h.staffId===sid && h.date===date)));
+
+  const goAdmin = () => { window.location.hash='#admin'; loggedIn ? setPage('admin') : setPage('adminLogin'); };
+  const logout  = () => { setLoggedIn(false); setPage('customer'); window.location.hash=''; };
+
+  if(page==='admin' && loggedIn)
+    return <AdminDashboard bookings={bookings} holidays={holidays}
+      onUpdate={updBk} onAddHol={addHol} onRemoveHol={removeHol} onLogout={logout}/>;
+  if(page==='adminLogin')
+    return <AdminLogin onLogin={()=>{ setLoggedIn(true); setPage('admin'); }}/>;
+  return <CustomerApp bookings={bookings} holidays={holidays}
+    onAdd={addBk} onUpdate={updBk} onAdmin={goAdmin}/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
