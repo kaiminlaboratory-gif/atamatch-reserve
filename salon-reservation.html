@@ -988,6 +988,10 @@ function Step4({booking, onReset, onLookup}) {
               📱 LINE公式アカウントから予約すると<br/>予約確認・前日リマインドが届きます
             </div>
           )}
+          {/* 🔧 デバッグ表示（確認後に削除） */}
+          <div style={{background:'#fff3cd',border:'1px solid #ffc107',borderRadius:8,padding:'10px 14px',marginBottom:16,fontSize:11,color:'#555',wordBreak:'break-all'}}>
+            🔧 デバッグ: lineUserId = <strong>{booking.lineUserId || '❌ null（LIFFでuserIdが取得できていない）'}</strong>
+          </div>
           <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:300,margin:'0 auto'}}>
             <button className="fb-btn" style={{width:'100%'}} onClick={onReset}>新規予約へ</button>
             <button className="fb-back" style={{width:'100%'}} onClick={onLookup}>予約の確認・キャンセル</button>
