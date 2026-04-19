@@ -472,6 +472,25 @@ const postLineConfirm = async (booking, lineUserId) => {
   }
 };
 
+// キャンセル時にGoogleカレンダーの予定を削除（Apps Script経由）
+const deleteGCalEvent = async (booking) => {
+  if (!booking || !booking.staffId || booking.staffId === 0) return;
+  const start = new Date(`${booking.date}T${booking.time}:00`);
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'gcal_delete',
+        staffId: String(booking.staffId),
+        startTime: start.toISOString(),
+        bookingId: booking.id,
+      })
+    });
+  } catch(e) {
+    console.warn('[GCal] delete failed:', e);
+  }
+};
+
 /* ═══════════════════════════════════════════
    STORAGE
 ═══════════════════════════════════════════ */
@@ -1001,19 +1020,34 @@ function Step4({booking, onReset, onLookup}) {
 /* ═══════════════════════════════════════════
    LOOKUP（予約確認・キャンセル）
 ═══════════════════════════════════════════ */
-function Lookup({bookings, onUpdate, onBack}) {
+function Lookup({bookings, onUpdate, onBack, lineUserId}) {
   const [id,setId]         = useState('');
   const [phone,setPhone]   = useState('');
   const [res,setRes]       = useState(null);
   const [err,setErr]       = useState('');
   const [confirm,setConfirm] = useState(false);
 
+  // LINEログイン済みの場合、直近の有効な予約を自動表示
+  useEffect(() => {
+    if (!lineUserId) return;
+    const today = toStr(new Date());
+    const found = bookings
+      .filter(b => b.lineUserId === lineUserId && b.status !== 'キャンセル' && b.date >= today)
+      .sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))[0];
+    if (found) setRes(found);
+  }, [lineUserId]);
+
   const search = () => {
     setErr(''); setRes(null);
     const f = bookings.find(b => b.id === id.toUpperCase().trim() && b.phone === phone.trim());
     f ? setRes(f) : setErr('予約が見つかりませんでした。予約番号と電話番号をご確認ください。');
   };
-  const cancel = () => { onUpdate(res.id,'キャンセル'); setRes({...res,status:'キャンセル'}); setConfirm(false); };
+  const cancel = () => {
+    onUpdate(res.id, 'キャンセル');
+    deleteGCalEvent(res);
+    setRes({...res, status:'キャンセル'});
+    setConfirm(false);
+  };
   const menu  = res ? MENUS.find(m => m.id === res.menuId)  : null;
   const opts  = res ? res.optIds.map(id => OPTIONS.find(o => o.id === id)) : [];
   const staff = res ? STAFF.find(s => s.id === res.staffId) : null;
@@ -1122,7 +1156,7 @@ function CustomerApp({bookings, holidays, onAdd, onUpdate, onAdmin}) {
 
   if(lookup) return (
     <><StoreHeader onAdmin={onAdmin}/>
-    <Lookup bookings={bookings} onUpdate={onUpdate} onBack={()=>setLookup(false)}/></>
+    <Lookup bookings={bookings} onUpdate={onUpdate} onBack={()=>setLookup(false)} lineUserId={lineUserId}/></>
   );
 
   return (
@@ -1269,12 +1303,37 @@ function AdminHolidays({holidays, onAdd, onRemove}) {
    ADMIN DASHBOARD
 ═══════════════════════════════════════════ */
 function AdminDashboard({bookings, holidays, onUpdate, onAddHol, onRemoveHol, onLogout}) {
-  const [tab,   setTab]   = useState('today');
-  const [sel,   setSel]   = useState(null);
-  const [fDate, setFDate] = useState('');
-  const [fStaff,setFStaff]= useState('');
-  const [fStat, setFStat] = useState('');
-  const [calV,  setCalV]  = useState(new Date());
+  const [tab,      setTab]      = useState('today');
+  const [sel,      setSel]      = useState(null);
+  const [fDate,    setFDate]    = useState('');
+  const [fStaff,   setFStaff]   = useState('');
+  const [fStat,    setFStat]    = useState('');
+  const [calV,     setCalV]     = useState(new Date());
+  const [syncing,  setSyncing]  = useState(false);
+  const [syncMsg,  setSyncMsg]  = useState('');
+
+  // LINEでキャンセルされた予約をlocalStorageに同期
+  const syncLineCancellations = async () => {
+    setSyncing(true);
+    setSyncMsg('');
+    try {
+      const res = await fetch(GAS_URL + '?action=cancelled_ids');
+      const data = await res.json();
+      const ids = data.cancelled || [];
+      let count = 0;
+      ids.forEach(id => {
+        const bk = bookings.find(b => b.id === id && b.status !== 'キャンセル');
+        if (bk) { onUpdate(id, 'キャンセル'); count++; }
+      });
+      setSyncMsg(count > 0 ? `${count}件のLINEキャンセルを反映しました` : '新しいキャンセルはありません');
+    } catch(e) {
+      setSyncMsg('同期に失敗しました');
+    }
+    setSyncing(false);
+  };
+
+  // 管理ページ表示時に自動同期
+  useEffect(() => { syncLineCancellations(); }, []);
 
   const todayStr  = toStr(new Date());
   const todayBk   = bookings.filter(b=>b.date===todayStr).sort((a,b)=>a.time.localeCompare(b.time));
@@ -1293,7 +1352,14 @@ function AdminDashboard({bookings, holidays, onUpdate, onAddHol, onRemoveHol, on
   const cCells = []; for(let i=0;i<cFirst;i++) cCells.push(null); for(let d=1;d<=cDays;d++) cCells.push(d);
   const countDay = d => { if(!d) return 0; const s=toStr(new Date(cy,cm,d)); return bookings.filter(b=>b.date===s&&b.status!=='キャンセル').length; };
 
-  const chSt = (id,st) => { onUpdate(id,st); setSel(p => p ? {...p,status:st} : null); };
+  const chSt = (id, st) => {
+    onUpdate(id, st);
+    setSel(p => p ? {...p, status:st} : null);
+    if (st === 'キャンセル') {
+      const b = bookings.find(bk => bk.id === id);
+      if (b) deleteGCalEvent(b);
+    }
+  };
 
   /* 予約カード */
   const BkCard = ({b,onClick}) => {
@@ -1420,6 +1486,15 @@ function AdminDashboard({bookings, holidays, onUpdate, onAddHol, onRemoveHol, on
         {/* 予約一覧 */}
         {tab==='all' && (
           <div className="fu">
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+              <button
+                onClick={syncLineCancellations}
+                disabled={syncing}
+                style={{fontSize:12,padding:'5px 12px',background:'#21b65c',color:'#fff',border:'none',borderRadius:6,cursor:syncing?'not-allowed':'pointer',opacity:syncing?0.6:1}}>
+                {syncing ? '同期中...' : '🔄 LINEキャンセル同期'}
+              </button>
+              {syncMsg && <span style={{fontSize:12,color:syncMsg.includes('失敗')?'#dc2626':'#21b65c'}}>{syncMsg}</span>}
+            </div>
             <div className="fbar">
               <input type="date" className="fsel" value={fDate} onChange={e=>setFDate(e.target.value)}/>
               <select className="fsel" value={fStaff} onChange={e=>setFStaff(e.target.value)}>
