@@ -382,10 +382,11 @@ const fetchGCalData = async (staffId) => {
           holidays.push(toStr(d));
         }
       } else if(start.dateTime) {
-        // 時刻付きイベント → 予約済みスロット扱い（40分インターバル込みでブロック）
+        // システム予約（【予約】で始まる）のみ40分バッファ適用、個人予定はバッファなし
         const sdt = new Date(start.dateTime);
         const edt = new Date(end.dateTime);
-        const edtWithBuffer = new Date(edt.getTime() + 40 * 60000);
+        const isSystemBooking = ev.summary && ev.summary.startsWith('【予約】');
+        const edtWithBuffer = isSystemBooking ? new Date(edt.getTime() + 40 * 60000) : edt;
         const ds  = toStr(sdt);
         if(!busySlots[ds]) busySlots[ds] = [];
         const cur = new Date(sdt);
@@ -1002,15 +1003,18 @@ function Step4({booking, onReset, onLookup}) {
               <span className="c-val" style={{color:'var(--green)',fontWeight:700,fontSize:16}}>{fmt(total)}</span>
             </div>
           </div>
-          {!booking.lineUserId && (
-            <div style={{background:'#f0fff4',border:'1px solid #b2e8c8',borderRadius:8,padding:'12px 16px',marginBottom:20,fontSize:12,color:'#555',textAlign:'center',lineHeight:1.8}}>
-              📱 LINE公式アカウントから予約すると<br/>予約確認・前日リマインドが届きます
+          <div style={{textAlign:'left',fontSize:13,color:'#c00',lineHeight:1.9,marginBottom:24}}>
+            <p style={{marginBottom:12}}>●お車でお越しの場合<br/>専用駐車場はございませんが近くの県立総合病院の駐車場を利用いただいた場合、駐車券ご提示で駐車料金をお支払い致します。<br/>自転車は店舗前にお停めいただけます。</p>
+            <p style={{marginBottom:12}}>●お支払いについて<br/>現金、クレジット、交通系電子マネー、iD、QR決済のご利用が可能です。</p>
+            <p style={{marginBottom:12}}>●服装について<br/>首肩のもみほぐしも行うため、フードなど首周りの隠れるものや厚手の服装は避ける方が効果を実感できます。また足の施術を行う為、スカートは避けていただきますようお願い致します。</p>
+            <p style={{marginBottom:12}}>●キャンセルについて<br/>やむを得ずキャンセルされる場合は当日の２時間前までにお願いします。無断キャンセルや繰り返しの当日キャンセルがあった場合は他のお客様のご迷惑となりますので今後のご予約をお断りする場合がございます。</p>
+            <p style={{marginBottom:0}}>●その他、ご不明な点等ございましたら<br/>公式LINEのトークページ <a href="https://lin.ee/n9jYnzo" style={{color:'#c00'}}>https://lin.ee/n9jYnzo</a> よりお気軽にお問い合わせくださいませ。<br/>当日、お会いできるのを楽しみにしております。</p>
+          </div>
+          {typeof liff !== 'undefined' && liff.isInClient && liff.isInClient() && (
+            <div style={{maxWidth:300,margin:'0 auto'}}>
+              <button className="fb-btn" style={{width:'100%'}} onClick={()=>liff.closeWindow()}>トーク画面に戻る</button>
             </div>
           )}
-          <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:300,margin:'0 auto'}}>
-            <button className="fb-btn" style={{width:'100%'}} onClick={onReset}>新規予約へ</button>
-            <button className="fb-back" style={{width:'100%'}} onClick={onLookup}>予約の確認・キャンセル</button>
-          </div>
         </div>
       </div>
     </div>
@@ -1302,7 +1306,7 @@ function AdminHolidays({holidays, onAdd, onRemove}) {
 /* ═══════════════════════════════════════════
    ADMIN DASHBOARD
 ═══════════════════════════════════════════ */
-function AdminDashboard({bookings, holidays, onUpdate, onAddHol, onRemoveHol, onLogout}) {
+function AdminDashboard({bookings, holidays, onAdd, onUpdate, onAddHol, onRemoveHol, onLogout}) {
   const [tab,      setTab]      = useState('today');
   const [sel,      setSel]      = useState(null);
   const [fDate,    setFDate]    = useState('');
@@ -1332,8 +1336,43 @@ function AdminDashboard({bookings, holidays, onUpdate, onAddHol, onRemoveHol, on
     setSyncing(false);
   };
 
+  // LINEで予約された内容をlocalStorageに同期
+  const syncLineBookings = async () => {
+    try {
+      const res = await fetch(GAS_URL + '?action=line_bookings');
+      const data = await res.json();
+      const lineBookings = data.bookings || [];
+      const existingIds = bookings.map(b => b.id);
+      lineBookings.forEach(lb => {
+        if (existingIds.includes(lb.id)) return;
+        const menu  = MENUS.find(m => m.name === lb.menuName) || MENUS[0];
+        const staff = STAFF.find(s => s.name === lb.staffName) || STAFF[0];
+        onAdd({
+          id: lb.id,
+          menuId: menu.id,
+          optIds: [],
+          staffId: staff.id,
+          date: lb.date,
+          time: lb.time,
+          name: lb.name,
+          phone: '',
+          email: '',
+          notes: '',
+          lineUserId: lb.lineUserId,
+          status: '確定',
+          at: lb.createdAt || new Date().toISOString()
+        });
+      });
+    } catch(e) {
+      console.warn('LINE booking sync failed:', e);
+    }
+  };
+
   // 管理ページ表示時に自動同期
-  useEffect(() => { syncLineCancellations(); }, []);
+  useEffect(() => {
+    syncLineCancellations();
+    syncLineBookings();
+  }, []);
 
   const todayStr  = toStr(new Date());
   const todayBk   = bookings.filter(b=>b.date===todayStr).sort((a,b)=>a.time.localeCompare(b.time));
@@ -1563,7 +1602,7 @@ function App() {
 
   if(page==='admin' && loggedIn)
     return <AdminDashboard bookings={bookings} holidays={holidays}
-      onUpdate={updBk} onAddHol={addHol} onRemoveHol={removeHol} onLogout={logout}/>;
+      onAdd={addBk} onUpdate={updBk} onAddHol={addHol} onRemoveHol={removeHol} onLogout={logout}/>;
   if(page==='adminLogin')
     return <AdminLogin onLogin={()=>{ setLoggedIn(true); setPage('admin'); }}/>;
   return <CustomerApp bookings={bookings} holidays={holidays}
